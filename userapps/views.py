@@ -1,9 +1,11 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
-from .serializers import RegistrationSerializer
+from .serializers import ProfileSerializer, RegistrationSerializer
+from .models import profile as Profile
 
 
 # REGISTRATION VIEW
@@ -33,3 +35,18 @@ class LoginView(APIView):
                  
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    #  Dashboard VIEW
+class UserDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+           profile_obj = Profile.objects.get(user=request.user)
+           serializer = ProfileSerializer(profile_obj)
+           data = serializer.data
+           return Response(data, status=status.HTTP_200_OK)
+        except Profile.DoesNotExist:
+            return Response({'error': 'Profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)            

@@ -37,3 +37,13 @@ class UserDashboardTests(APITestCase):
 		self.assertEqual(login_response.status_code, 200)
 		self.assertEqual(dashboard_response.status_code, 200)
 		self.assertEqual(dashboard_response.data['username'], self.user.username)
+
+	def test_logout_clears_authenticated_session(self):
+		self.client.login(username=self.user.username, password=self.password)
+
+		logout_response = self.client.post('/api/logout/')
+		dashboard_response = self.client.get('/api/dashboard/')
+
+		self.assertEqual(logout_response.status_code, 200)
+		self.assertEqual(logout_response.data['Message'], 'Logout Successful')
+		self.assertIn(dashboard_response.status_code, (401, 403))
